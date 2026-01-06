@@ -1,8 +1,7 @@
-// payment new
 "use client";
 
-import { useEffect, useLayoutEffect, useState } from "react";
-import { useRouter,useSearchParams } from "next/navigation";
+import { useEffect, useLayoutEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/app/context/authContext";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -11,19 +10,62 @@ import toast from "react-hot-toast";
 
 gsap.registerPlugin(ScrollTrigger);
 
- 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 );
 
-function Subscription() {
+// Separate component for payment verification
+function PaymentVerification() {
+  const searchParams = useSearchParams();
+  const sessionId = searchParams.get("session_id");
+  const { token } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!sessionId || !token) return;
+
+    const verifyPayment = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}stripe/verify-session`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ session_id: sessionId }),
+          }
+        );
+
+        const data = await res.json();
+
+        if (!res.ok || !data.status) {
+          toast.error("Payment verification failed");
+          return;
+        }
+
+        toast.success("Payment successful! Membership activated");
+        router.replace("/subscription");
+      } catch (err) {
+        console.log("Verification error:", err);
+        toast.error("Something went wrong during verification");
+      }
+    };
+
+    verifyPayment();
+  }, [sessionId, token, router]);
+
+  return null;
+}
+
+function SubscriptionContent() {
   const [memberships, setMemberships] = useState([]);
   const [loadingId, setLoadingId] = useState(null);
-
   const router = useRouter();
   const { token } = useAuth();
 
-  // 🔹 Fetch memberships
+  // Fetch memberships
   useEffect(() => {
     const fetchMemberships = async () => {
       try {
@@ -31,7 +73,6 @@ function Subscription() {
         const json = await res.json();
         setMemberships(Array.isArray(json.data) ? json.data : []);
       } catch (err) {
-
         toast.error("Can't fetch the membership list");
       }
     };
@@ -39,50 +80,7 @@ function Subscription() {
     fetchMemberships();
   }, []);
 
-const searchParams = useSearchParams();
-const sessionId = searchParams.get("session_id");
-  useEffect(() => {
-  if (!sessionId || !token) return;
-
-  const verifyPayment = async () => {
-    try {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}stripe/verify-session`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ session_id: sessionId }),
-        }
-      );
-
-      const data = await res.json();
-
-      if (!res.ok || !data.status) {
-     
-        toast.error("Payment verification failed");
-        return;
-      }
-
-  
-      toast.success("Payment successful! Membership activated");
-
-      // Optional: clean URL
-      router.replace("/subscription");
-
-    } catch (err) {
-      console.log("Verification error:", err);
-   
-      toast.error("Something went wrong during verification");
-    }
-  };
-
-  verifyPayment();
-}, [sessionId, token]);
-
-  // 🔹 GSAP animation
+  // GSAP animation
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
       ScrollTrigger.batch(".subscription_single", {
@@ -100,17 +98,15 @@ const sessionId = searchParams.get("session_id");
     return () => ctx.revert();
   }, [memberships]);
 
-
   const handleBuy = async (membershipId) => {
     if (!token) {
       router.push("/login");
       return;
     }
 
-     try {
+    try {
       setLoadingId(membershipId);
 
-     
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_URL}stripe/create-payment-intent`,
         {
@@ -123,19 +119,15 @@ const sessionId = searchParams.get("session_id");
         }
       );
 
-         const data = await res.json();
+      const data = await res.json();
 
-     if (!data.data.checkoutUrl) {
-      toast.error("Failed to redirect to payment");
-      return;
-    }
+      if (!data.data.checkoutUrl) {
+        toast.error("Failed to redirect to payment");
+        return;
+      }
 
-    window.location.href = data.data.checkoutUrl;
-
-     
-        setLoadingId(null);
-      
-
+      window.location.href = data.data.checkoutUrl;
+      setLoadingId(null);
     } catch (err) {
       console.error(err);
       toast.error("Failed to redirect to payment");
@@ -207,47 +199,107 @@ const sessionId = searchParams.get("session_id");
   );
 }
 
+// Main component with Suspense wrapper
+function Subscription() {
+  return (
+    <>
+      <Suspense fallback={null}>
+        <PaymentVerification />
+      </Suspense>
+      <SubscriptionContent />
+    </>
+  );
+}
+
 export default Subscription;
 
-// payment new
-// dynamic new one 
+// // payment new
 // "use client";
+
 // import { useEffect, useLayoutEffect, useState } from "react";
-// import { useRouter } from "next/navigation";
+// import { useRouter,useSearchParams } from "next/navigation";
 // import { useAuth } from "@/app/context/authContext";
 // import gsap from "gsap";
 // import { ScrollTrigger } from "gsap/ScrollTrigger";
 // import { loadStripe } from "@stripe/stripe-js";
+// import toast from "react-hot-toast";
+
 // gsap.registerPlugin(ScrollTrigger);
 
-// function Subscription() {
-//   const [memberships, setMemberships] = useState([]);
-//   const router = useRouter();
-//   const {token } = useAuth(); 
-
-
-//   const stripePromise = loadStripe(
+ 
+// const stripePromise = loadStripe(
 //   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
 // );
 
+// function Subscription() {
+//   const [memberships, setMemberships] = useState([]);
+//   const [loadingId, setLoadingId] = useState(null);
+
+//   const router = useRouter();
+//   const { token } = useAuth();
+
+//   // 🔹 Fetch memberships
 //   useEffect(() => {
 //     const fetchMemberships = async () => {
 //       try {
-//         const res = await fetch("http://localhost:5000/api/memberships");
+//         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}memberships`);
 //         const json = await res.json();
-
-//         const list = Array.isArray(json.data) ? json.data : [];
-//         setMemberships(list);
+//         setMemberships(Array.isArray(json.data) ? json.data : []);
 //       } catch (err) {
-//         console.error("Error fetching memberships:", err);
+
+//         toast.error("Can't fetch the membership list");
 //       }
 //     };
 
 //     fetchMemberships();
 //   }, []);
 
+// const searchParams = useSearchParams();
+// const sessionId = searchParams.get("session_id");
+//   useEffect(() => {
+//   if (!sessionId || !token) return;
+
+//   const verifyPayment = async () => {
+//     try {
+//       const res = await fetch(
+//         `${process.env.NEXT_PUBLIC_BACKEND_URL}stripe/verify-session`,
+//         {
+//           method: "POST",
+//           headers: {
+//             "Content-Type": "application/json",
+//             Authorization: `Bearer ${token}`,
+//           },
+//           body: JSON.stringify({ session_id: sessionId }),
+//         }
+//       );
+
+//       const data = await res.json();
+
+//       if (!res.ok || !data.status) {
+     
+//         toast.error("Payment verification failed");
+//         return;
+//       }
+
+  
+//       toast.success("Payment successful! Membership activated");
+
+//       // Optional: clean URL
+//       router.replace("/subscription");
+
+//     } catch (err) {
+//       console.log("Verification error:", err);
+   
+//       toast.error("Something went wrong during verification");
+//     }
+//   };
+
+//   verifyPayment();
+// }, [sessionId, token]);
+
+//   // 🔹 GSAP animation
 //   useLayoutEffect(() => {
-//     let ctx = gsap.context(() => {
+//     const ctx = gsap.context(() => {
 //       ScrollTrigger.batch(".subscription_single", {
 //         onEnter: batch => {
 //           gsap.fromTo(
@@ -263,17 +315,19 @@ export default Subscription;
 //     return () => ctx.revert();
 //   }, [memberships]);
 
-//   // 🔥 BUY HANDLER
-//   const handleBuy = async (membershipId) => {
 
+//   const handleBuy = async (membershipId) => {
 //     if (!token) {
 //       router.push("/login");
 //       return;
 //     }
 
-//     try {
+//      try {
+//       setLoadingId(membershipId);
+
+     
 //       const res = await fetch(
-//         "http://localhost:5000/api/user-memberships",
+//         `${process.env.NEXT_PUBLIC_BACKEND_URL}stripe/create-payment-intent`,
 //         {
 //           method: "POST",
 //           headers: {
@@ -284,17 +338,23 @@ export default Subscription;
 //         }
 //       );
 
-//       const data = await res.json();
+//          const data = await res.json();
 
-//       if (!res.ok || !data.status) {
-//         alert(data.message || "Purchase failed");
-//         return;
-//       }
+//      if (!data.data.checkoutUrl) {
+//       toast.error("Failed to redirect to payment");
+//       return;
+//     }
 
-//       alert("Membership purchased successfully ");
+//     window.location.href = data.data.checkoutUrl;
+
+     
+//         setLoadingId(null);
+      
+
 //     } catch (err) {
 //       console.error(err);
-//       alert("Something went wrong");
+//       toast.error("Failed to redirect to payment");
+//       setLoadingId(null);
 //     }
 //   };
 
@@ -310,19 +370,25 @@ export default Subscription;
 //           {memberships.map((item) => (
 //             <div className="subscription_single" key={item.id}>
 //               <div className="subscription_single_left">
-//                 <h4>{item.title} <span>Credits</span></h4>
+//                 <h4>
+//                   {item.title} <span>Credits</span>
+//                 </h4>
 //               </div>
 
 //               <div className="subscription_single_right">
 //                 <div className="subscrip_price">
-//                   <h3><span>$</span>{item.price}</h3>
+//                   <h3>
+//                     <span>$</span>
+//                     {item.price}
+//                   </h3>
 //                 </div>
 
 //                 <div className="subscrip_body">
 //                   <ul>
 //                     <li>
 //                       <img src="/images/rarw.png" alt="" />
-//                       {item.class_count} Class{item.class_count > 1 ? "es" : ""}
+//                       {item.class_count} Class
+//                       {item.class_count > 1 ? "es" : ""}
 //                     </li>
 
 //                     {Array.isArray(item.description) &&
@@ -334,14 +400,22 @@ export default Subscription;
 //                   </ul>
 
 //                   <div className="subscrip_btn">
-//                     <button onClick={() => handleBuy(item.id)}>
-//                       BUY NOW <span><img src="/images/rarw.png" alt="" /></span>
+//                     <button
+//                       disabled={loadingId === item.id}
+//                       onClick={() => handleBuy(item.id)}
+//                     >
+//                       {loadingId === item.id ? "BUYING..." : "BUY NOW"}
+//                       <span>
+//                         <img src="/images/rarw.png" alt="" />
+//                       </span>
 //                     </button>
 //                   </div>
 //                 </div>
 //               </div>
 //             </div>
 //           ))}
+
+//           {!memberships.length && <p>No memberships available</p>}
 //         </div>
 //       </div>
 //     </section>
@@ -349,6 +423,7 @@ export default Subscription;
 // }
 
 // export default Subscription;
+
 
 // dynamic new one 
 
