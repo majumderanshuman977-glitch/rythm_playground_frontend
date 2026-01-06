@@ -490,7 +490,7 @@ function Page() {
               {loading ? (
                 <p className="loading_text">Loading schedules...</p>
               ) : classSchedules.length === 0 ? (
-                <p className="loading_text">No classes scheduled.</p>
+                <p className="loading_text"></p>
               ) : (
                 classSchedules.map((schedule) => {
                   const capacity = Number(schedule.capacity) || 0;

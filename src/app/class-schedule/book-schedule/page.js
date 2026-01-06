@@ -75,7 +75,7 @@ function BookScheduleContent() {
       }
 
       const response = await fetch(
-        `http://localhost:5000/api/booking/user/${id}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}booking/user/${id}`,
         {
           method: "POST",
           headers: {
