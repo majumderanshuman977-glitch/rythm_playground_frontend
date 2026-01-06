@@ -19,11 +19,7 @@ function BookSchedule() {
   const [message, setMessage] = useState({ type: "", text: "" });
 
 
-  // const availableSlots = data
-  //   ? (data.capacity || 0) - (data.booked_count || 0)
-  //   : 0;
 
-  // Debug: Log when data changes
   useEffect(() => {
     console.log("Data updated:", data);
     console.log("Available Slots:", availableSlots);
@@ -36,7 +32,7 @@ function BookSchedule() {
     const fetchBooking = async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/booking/${id}`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}booking/${id}`,
           {
             method: "GET",
           }
