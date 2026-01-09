@@ -12,7 +12,9 @@ function BlogDetailsContent() {
   const [blog, setBlog] = useState(null);
   const [bloglist, setBloglist] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const stripHtml = (html = "") => {
+  return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+};
   // Fetch single blog
   useEffect(() => {
     if (!id) return;
@@ -29,6 +31,7 @@ function BlogDetailsContent() {
         const data = await res.json();
 
         if (data.status) {
+          console.log("Fetched blog data:", data.data);
           setBlog(data.data);
         }
       } catch (err) {
@@ -97,7 +100,8 @@ function BlogDetailsContent() {
           </div>
 
           <div className="blog_content">
-            <p>{blog.content}</p>
+            {/* <p>{blog.content}</p> */}
+            <p dangerouslySetInnerHTML={{ __html: blog.content }}></p>
           </div>
         </div>
 
@@ -122,10 +126,10 @@ function BlogDetailsContent() {
                     <div className="latest_blg_cont">
                       <h3>{item.title}</h3>
                       <p>
-                        {item.short_description
-                          ? item.short_description
-                          : item.content?.slice(0, 80) + "..."}
-                      </p>
+  {item.content
+    ? stripHtml(item.content).slice(0, 80) + "..."
+    : ""}
+</p>
                     </div>
                   </div>
                 </Link>
