@@ -1,26 +1,272 @@
-import Link from 'next/link';
-import React from 'react'
+"use client";
 
-function page() {
+import Link from "next/link";
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+/* ---------------- INNER COMPONENT (uses useSearchParams) ---------------- */
+function BlogDetailsContent() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get("id");
+
+  const [blog, setBlog] = useState(null);
+  const [bloglist, setBloglist] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch single blog
+  useEffect(() => {
+    if (!id) return;
+
+    setLoading(true);
+    setBlog(null);
+
+    const fetchBlog = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}blogs/${id}`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+
+        if (data.status) {
+          setBlog(data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching blog:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlog();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [id]);
+
+  // Fetch blog list
+  useEffect(() => {
+    const fetchBlogList = async () => {
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}blogs`,
+          { cache: "no-store" }
+        );
+        const data = await res.json();
+
+        if (data.status) {
+          setBloglist(data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching blog list:", err);
+      }
+    };
+
+    fetchBlogList();
+  }, []);
+
+  if (loading) {
+    return <p className="text-center py-5">Loading blog...</p>;
+  }
+
+  if (!blog) {
+    return <p className="text-center py-5">Blog not found</p>;
+  }
+
   return (
-    <>
-       <section className='blogdetail_area_main'>
-           <div className='blogdetail_area_inner'>
-               <div className='blogdetail_area_left'>
-                   <h2>Achieving Peak Body Fitness with Purpose</h2>
-                   <div className='blog_cret_date_detl'>
-                        <p><img src='../images/user.png' alt='img' /> By : Admin</p>
-                        <p><img src='../images/calendar.png' alt='img' /> Sept 25, 2025</p>
+    <section className="blogdetail_area_main">
+      <div className="blogdetail_area_inner">
+
+        {/* LEFT BLOG DETAIL */}
+        <div className="blogdetail_area_left">
+          <h2>{blog.title}</h2>
+
+          <div className="blog_cret_date_detl">
+            <p>
+              <img src="../images/user.png" alt="img" /> By : {blog.role}
+            </p>
+            <p>
+              <img src="../images/calendar.png" alt="img" />{" "}
+              {blog.published_date}
+            </p>
+          </div>
+
+          <div className="blog_img">
+            <img
+              src={blog.image_url || "../images/blog1.png"}
+              alt={blog.title}
+            />
+          </div>
+
+          <div className="blog_content">
+            <p>{blog.content}</p>
+          </div>
+        </div>
+
+        {/* RIGHT LATEST BLOGS */}
+        <div className="blogdetail_area_right">
+          <h3>Latest News</h3>
+
+          <div className="latest_blg_all">
+            {bloglist
+              .filter((item) => item.id != id)
+              .slice(0, 6)
+              .map((item) => (
+                <Link
+                  key={item.id}
+                  href={`/blog/blog-details?id=${item.id}`}
+                >
+                  <div className="latest_blog_sing">
+                    <img
+                      src={item.image_url || "../images/blog1.png"}
+                      alt={item.title}
+                    />
+                    <div className="latest_blg_cont">
+                      <h3>{item.title}</h3>
+                      <p>
+                        {item.short_description
+                          ? item.short_description
+                          : item.content?.slice(0, 80) + "..."}
+                      </p>
                     </div>
-                   <div className='blog_img'>
-                      <img src='../images/blog1.png' alt='img' />
-                   </div>
-                   <div className='blog_content'>
-                      <p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32. Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet..", comes from a line in section 1.10.32.</p>
-                      <p>Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature from 45 BC, making it over 2000 years old. Richard McClintock, a Latin professor at Hampden-Sydney College in Virginia, looked up one of the more obscure Latin words, consectetur, from a Lorem Ipsum passage, and going through the cites of the word in classical literature, discovered the undoubtable source. Lorem Ipsum comes from sections 1.10.32 and 1.10.33 of "de Finibus Bonorum et Malorum" (The Extremes of Good and Evil) by Cicero, written in 45 BC. This book is a treatise on the theory of ethics, very popular during the Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit amet.</p>
-                   </div>
-               </div>
-               <div className='blogdetail_area_right'>
+                  </div>
+                </Link>
+              ))}
+          </div>
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
+/* ---------------- PAGE EXPORT (Suspense wrapper) ---------------- */
+export default function Page() {
+  return (
+    <Suspense fallback={<p className="text-center py-5">Loading blog...</p>}>
+      <BlogDetailsContent />
+    </Suspense>
+  );
+}
+
+
+// "use client";
+
+// import Link from "next/link";
+// import React, { useState, useEffect } from "react";
+// import { useSearchParams  } from "next/navigation";
+// function page() {
+//   const searchParams = useSearchParams();
+//   const id = searchParams.get("id");
+//   console.log(id);
+
+//   const [blog, setBlog] = useState(null);
+//   const [bloglist, setBloglist] = useState([]);
+//   const [loading, setLoading] = useState(true);
+//   useEffect(() => {
+//     if (!id) return; 
+
+//     const fetchBlog = async () => {
+//       try {
+//         const res = await fetch(
+//           `${process.env.NEXT_PUBLIC_BACKEND_URL}blogs/${id}`,
+//           { cache: "no-store" }
+//         );
+//         const data = await res.json();
+
+//         if (data.status) {
+//           setBlog(data.data);
+//         }
+//       } catch (error) {
+//         console.error("Error fetching blog:", error);
+//       } finally {
+//         setLoading(false);
+//       }
+//     };
+
+//     const fetchBlogList = async () => {
+//       try {
+//         const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}blogs`, { cache: "no-store" });
+//         const data = await res.json();
+//         if (data.status) {
+//           setBloglist(data.data);
+//         }
+//       } catch (error) {
+//         console.error("Error fetching blog list:", error);
+//       }
+//     }
+//     fetchBlogList();
+
+//     fetchBlog();
+//   }, [id]); // ✅ depend on id
+
+//   if (loading) {
+//     return <p className="text-center py-5">Loading blog...</p>;
+//   }  if (!blog) {
+//     return <p className="text-center py-5">Blog not found</p>;
+//   }
+//   return (
+//     <>
+//        <section className='blogdetail_area_main'>
+//            <div className='blogdetail_area_inner'>
+//                <div className='blogdetail_area_left'>
+//                    <h2>{blog.title}</h2>
+//                    <div className='blog_cret_date_detl'>
+//                         <p><img src='../images/user.png' alt='img' /> By : {blog.role}</p>
+//                         <p><img src='../images/calendar.png' alt='img' /> {blog.published_date}</p>
+//                     </div>
+//                    <div className='blog_img'>
+//                       <img src='../images/blog1.png' alt='img' />
+//                    </div>
+//                    <div className='blog_content'>
+//                       <p>{blog.content}</p>
+//                    </div>
+//                </div>
+
+//                <div className="blogdetail_area_right">
+//   <h3>Latest News</h3>
+
+//   <div className="latest_blg_all">
+//     {bloglist.slice(0, 6).map((item) => (
+//       <Link
+//         key={item.id}
+//         href={`/blog/blog-details?id=${item.id}`}
+//       >
+//         <div className="latest_blog_sing">
+
+//           {/* IMAGE */}
+//           <img
+//             src={item.image_url || "/images/blog1.png"}
+//             alt={item.title}
+//           />
+
+//           {/* CONTENT */}
+//           <div className="latest_blg_cont">
+//             <h3>{item.title}</h3>
+//             <p>
+//               {item.short_description
+//                 ? item.short_description
+//                 : item.content?.slice(0, 80) + "..."}
+//             </p>
+//           </div>
+
+//         </div>
+//       </Link>
+//     ))}
+//   </div>
+// </div>
+
+              
+//            </div>
+//        </section>
+//     </>
+//   )
+// }
+
+// export default page;
+
+
+
+
+ {/* <div className='blogdetail_area_right'>
                   <h3>Latest News</h3>
                   <div className='latest_blg_all'>
                     <Link href={''}>
@@ -78,11 +324,4 @@ function page() {
                       </div>
                     </Link>
                   </div>
-               </div>
-           </div>
-       </section>
-    </>
-  )
-}
-
-export default page;
+               </div> */}

@@ -12,7 +12,6 @@ function Blog() {
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch blogs
   useEffect(() => {
     const fetchBlogs = async () => {
       try {
@@ -31,7 +30,6 @@ function Blog() {
     fetchBlogs();
   }, []);
 
-  // ✅ GSAP AFTER blogs are rendered
   useLayoutEffect(() => {
     if (!blogs.length) return;
 
