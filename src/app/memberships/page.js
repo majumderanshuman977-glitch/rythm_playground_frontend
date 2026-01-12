@@ -154,7 +154,7 @@ const router = useRouter();
      
 
 
-                        <div className='account_details_right_profile_info'>
+                        {/* <div className='account_details_right_profile_info'>
                             <div className='subscription_plan_area'>
                               <h3>Payment Methods</h3>
                               <div className='subscription_plan_box'>
@@ -177,7 +177,7 @@ const router = useRouter();
 
                               </div>
                             </div>                         
-                        </div>
+                        </div> */}
 
 
                         {/* Transaction History  */}
