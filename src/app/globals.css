@@ -4948,7 +4948,40 @@ img.prof_lft_bg {
   color: #1b5e20;
 }
 
-
+.tabs-block {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    padding: 0 0 35px;
+}
+.tabs-block li {
+    list-style: none;
+    background: #e3e3e3;
+    width: 170px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 6px;
+    margin: 0 12px 0 0;
+    font-size: 15px;
+    cursor: pointer;
+    transition: ease-in-out 0.6s;
+}
+.tabs-block li:hover {
+    background: #f1c542;
+    transition: ease-in-out 0.6s;
+}
+.tabs-block li.active {
+    background: #f1c542;
+    transition: ease-in-out 0.6s;
+}
+.class_history_main_single_top h4 {
+    margin: -6px 0 10px;
+}
+.gmeet_icon a img {
+    width: 31px;
+}
 
 
 
