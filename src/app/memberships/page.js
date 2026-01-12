@@ -1,16 +1,73 @@
 "use client";
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-
+ import { useRouter } from 'next/navigation';
 
 function memberships() {
 
 const [sideMenuOpen, serSideMenuOpen] = useState(false);
+ const [transactions, setTransactions] = useState([]);
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [membership, setMembership] = useState([]);
+const router = useRouter();
 
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        if (!token) {
+          setErrorMsg("User not authenticated");
+          setLoading(false);
+          return;
+        }
 
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}transactions-history`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
+        if (!res.ok) {
+          console.log("Failed to fetch transaction history");
+          setErrorMsg("Failed to fetch transaction history");
+          setLoading(false);
+          return;
+        }
 
+        const result = await res.json();
+        console.log("Transaction History Data:", result);
 
+        if (result.status && result.data) {
+          setTransactions(result.data.transactions || []);
+          setUser(result.data.user || null);
+          setMembership(result.data.membership || []);
+        } else {
+          setErrorMsg(result.message || "Failed to fetch transactions");
+        }
+      } catch (err) {
+        console.error(err);
+        setErrorMsg("Failed to fetch transaction history");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, []);
+
+  const getDaysLeft = (expiryDate) => {
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+  const diffTime = expiry - today;
+  return Math.max(Math.ceil(diffTime / (1000 * 60 * 60 * 24)), 0);
+};
 
 
   return (
@@ -48,51 +105,53 @@ const [sideMenuOpen, serSideMenuOpen] = useState(false);
                       <h2>Membership</h2>
 
                       <div className='account_details_right_profilenmimg_main'>
-                        <div className='account_details_right_profilenmimg'>
-                            <div className='userprof_top'>
-                                <div className='userprof_top_left'>
-                                    <div className='profile_img'>
-                                      <img src='../images/profile.png' alt='img' />
-                                    </div>
-                                    <div className='profile_dtl'>
-                                      <h3>Rahul Sharma</h3>
-                                      <p>+91 2536 5957 20</p>
-                                    </div>
-                                </div>
-                                
-                            </div>
-                        </div>
+                   <div className='account_details_right_profilenmimg'>
+  <div className='userprof_top'>
+    <div className='userprof_top_left'>
+      
+      {/* Profile Image */}
+      <div className='profile_img'>
+        <img 
+          src={user?.profile_image || '../images/profile.png'} 
+          alt='Profile' 
+        />
+      </div>
 
-                        <div className='account_details_right_profile_info'>
-                            <div className='subscription_plan_area'>
-                              <h3>Subscriptions Plan</h3>
-                              <div className='subscription_plan_box'>
+      {/* User Details */}
+      <div className='profile_dtl'>
+        <h3>{user?.name || "Unknown User"}</h3>
+        <p>{user?.phone || user?.email || "No contact info"}</p>
+      </div>
 
-                                  <div className='subscription_plan_box_sing'>
-                                      <div className='subscription_plan_box_sing_top'>
-                                          <h2>5 Class Credits</h2>
-                                          <h4>$12/<span>month</span></h4>
-                                      </div>
-                                      <p>36 Days remaining</p>
-                                      <button>Cancel Subscription</button>
-                                      <img className='tick_icon' src='../images/tick.png' alt='img' />
-                                  </div>
+    </div>
+  </div>
+</div>
 
-                                  <div className='subscription_plan_box_sing'>
-                                      <div className='subscription_plan_box_sing_top'>
-                                          <h2>10 Class Credits</h2>
-                                          <h4>$36/<span>month</span></h4>
-                                      </div>
-                                      <p>36 Days remaining</p>
-                                      <div className='upgradepln'>
-                                          <button>Upgrade</button>
-                                          <p>Learn about this plan</p>
-                                      </div>
-                                  </div>
 
-                              </div>
-                            </div>                         
-                        </div>
+<div className='account_details_right_profile_info'>
+  <div className='subscription_plan_area'>
+    <h3>Subscriptions Plan</h3>
+
+    <div className='subscription_plan_box'>
+      {membership.map((plan, index) => (
+        <div className='subscription_plan_box_sing' key={index}>
+          
+          <div className='subscription_plan_box_sing_top'>
+            <h2>{plan.title}</h2>
+            <h4>
+              A${plan.price}
+              <span>/credit</span>
+            </h4>
+          </div>
+
+          <p>{plan.days_left} Days remaining</p>
+
+        </div>
+      ))}
+    </div>
+  </div>
+</div>
+     
 
 
                         <div className='account_details_right_profile_info'>
@@ -119,6 +178,138 @@ const [sideMenuOpen, serSideMenuOpen] = useState(false);
                               </div>
                             </div>                         
                         </div>
+
+
+                        {/* Transaction History  */}
+                        {/* <div className="account_details_right_profile_info">
+  <div className="class_history_main">
+    <h5>Transaction History</h5>
+
+    <div className="class_history_main_all_main">
+
+
+      <div className="class_history_main_all">
+        <div className="class_history_main_single">
+          <div className="class_history_main_single_top">
+            <h2>Monthly Membership</h2>
+            <p>Unlimited access to all fitness classes</p>
+          </div>
+          <div>
+            <h3>Class Credit Remaing: 20</h3>
+          </div>
+
+        </div>
+
+        <h6>
+          <img src="../images/calendar.png" alt="img" />
+          12 Jul, 2025
+        </h6>
+
+        <h6 className="transaction_amount success">
+          + ₹2,499
+        </h6>
+      </div>
+
+   
+      <div className="class_history_main_all">
+        <div className="class_history_main_single">
+          <div className="class_history_main_single_top">
+            <h2>Yoga Class Pass</h2>
+            <p>Single session with certified instructor</p>
+          </div>
+
+          <div>
+            <h3>Class Credit Remaing: 20</h3>
+          </div>
+        </div>
+
+        <h6>
+          <img src="../images/calendar.png" alt="img" />
+          05 Jul, 2025
+        </h6>
+
+       
+      </div>
+
+  
+      <div className="class_history_main_all">
+        <div className="class_history_main_single">
+          <div className="class_history_main_single_top">
+            <h2>Pilates Trial Session</h2>
+            <p>One-on-one beginner pilates class</p>
+          </div>
+
+          <div>
+            <h3>Class Credit Remaing: 20</h3>
+          </div>
+        </div>
+
+        <h6>
+          <img src="../images/calendar.png" alt="img" />
+          28 Jun, 2025
+        </h6>
+
+        
+      </div>
+
+    </div>
+  </div>
+</div> */}
+<div className="account_details_right_profile_info">
+  <div className="class_history_main">
+    <h5>Transaction History</h5>
+
+    <div className="class_history_main_all_main">
+      {transactions.map((item) => {
+        const isMembership = item.history_type === "membership_purchase";
+        const isClassBooking = item.history_type === "class_booking";
+
+        return (
+          <div className="class_history_main_all" key={item.id}>
+            <div className="class_history_main_single">
+              <div className="class_history_main_single_top">
+                <h2>
+                  {isMembership
+                    ? item.membership?.title
+                    : item.class_session?.title}
+                </h2>
+
+                <p>
+                  {isMembership
+                    ? `Membership Purchase (${item.membership?.class_count} Classes)`
+                    : "Class Booking"}
+                </p>
+              </div>
+
+              <div>
+                <h3>
+                  Total Class Credits: {item.total_class_credits}
+                </h3>
+              </div>
+            </div>
+
+            {/* Date */}
+            <h6>
+              <img src="../images/calendar.png" alt="img" />
+              {item.date}
+            </h6>
+
+            {/* Amount (only for membership purchase) */}
+            {isMembership && (
+              <h6 className="transaction_amount success">
+                + A${item.membership?.price}
+              </h6>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+</div>
+
+
+
+
                     </div>
 
                   </div>
