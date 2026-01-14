@@ -47,7 +47,7 @@ const router = useRouter();
         if (result.status && result.data) {
           setTransactions(result.data.transactions || []);
           setUser(result.data.user || null);
-          setMembership(result.data.membership || []);
+          setMembership(result.data.memberships || []);
         } else {
           setErrorMsg(result.message || "Failed to fetch transactions");
         }
@@ -126,7 +126,7 @@ const router = useRouter();
     </div>
   </div>
 </div>
-
+{/* test  */}
 
 <div className='account_details_right_profile_info'>
   <div className='subscription_plan_area'>
@@ -137,9 +137,9 @@ const router = useRouter();
         <div className='subscription_plan_box_sing' key={index}>
           
           <div className='subscription_plan_box_sing_top'>
-            <h2>{plan.title}</h2>
+            <h2>{plan.membership.title}</h2>
             <h4>
-              A${plan.price}
+              A${plan.membership.price}
               <span>/credit</span>
             </h4>
           </div>
