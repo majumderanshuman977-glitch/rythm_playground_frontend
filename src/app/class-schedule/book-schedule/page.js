@@ -88,6 +88,11 @@ function BookScheduleContent() {
       const responseData = await response.json();
 
       if (!response.ok) {
+
+         if (responseData?.error_code === "NO_CREDITS") {
+    router.push("/subscription");
+    return;
+  }
         toast.error(responseData.message || "Booking failed");
         setBooking(false);
         return;
