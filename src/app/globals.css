@@ -583,18 +583,19 @@ select:focus {
 	font-weight: 400;
 }
 .subscription_plan_box_sing {
-	background: #ffecb2;
-	border-radius: 20px;
-	width: 34%;
-	margin: 0 30px 0 0;
-	padding: 23px 31px;
-	position: relative;
-	height: 192px;
+    background: #ffecb2;
+    border-radius: 20px;
+    width: 34%;
+    height: 192px;
+    margin: 0 30px 20px 0;
+    padding: 23px 31px;
+    position: relative;
 }
 .subscription_plan_box {
-	display: flex;
-	justify-content: flex-start;
-	align-items: center;
+    justify-content: flex-start;
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
 }
 .subscription_plan_box_sing_top {
 	display: flex;
