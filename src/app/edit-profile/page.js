@@ -153,7 +153,7 @@ const [profileImage, setProfileImage] = useState(null);
     e.preventDefault();
 
     if (formData.password && formData.password !== formData.confirmPassword) {
-      alert("Passwords do not match!");
+      setErrors({ confirmPassword: "Passwords do not match" });
       return;
     }
 
